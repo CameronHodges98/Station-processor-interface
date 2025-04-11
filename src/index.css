@@ -3,7 +3,7 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow: auto; /* Removes scrollbar */
+  overflow: auto;
 }
 
 /* Header styles */
@@ -21,7 +21,7 @@ header {
 .header-logo {
   position: absolute;
   left: 3rem;
-  height: 250px; /* Adjust logo height */
+  height: 250px;
 }
 
 .header-title {
@@ -38,18 +38,16 @@ body {
   font-family: Arial, sans-serif;
 }
 
-
 /* Main centered container */
 .centered-container {
   display: flex;
-  justify-content: center; /* Horizontally center */
-  align-items: center;     /* Vertically center */
-  min-height: 100vh;        /* Ensures full height */
-  background: #f3f4f6;      /* Light background color */
-  padding: 20px;
-  flex-direction: column;  /* Stack the sections on smaller screens */
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f3f4f6;
+  padding: 80px 0;
+  flex-direction: column;
   overflow: auto;
-  padding: 80px 0; /* Ensure content is pushed down to avoid overlap with the header */
 }
 
 /* Flex container for the two boxes */
@@ -57,33 +55,34 @@ body {
   display: flex;
   flex-direction: column;
   text-align: center;
-  gap: 24px; /* Adds space between the two sections */
-  max-width: 1000px; /* Max width for better readability */
+  gap: 24px;
+  max-width: 1000px;
   width: 100%;
 }
 
 /* Center the discrepancy container */
 .discrepancy-container {
   display: flex;
-  justify-content: center; /* Centers horizontally */
-  align-items: center; /* Centers vertically */
-  width: 100%; /* Ensure full width of the container */
-  height: 100%; /* Optional: You can adjust the height if needed */
-  padding: 20px; /* Optional: Add spacing around the container */
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  text-align: center;
 }
 
-/* Optionally, ensure that the card content is also centered */
 .discrepancy-container .card {
   width: 100%;
-  max-width: 800px; /* Optional: set a maximum width for better layout */
+  max-width: 800px;
   margin: 0 auto;
 }
 
-/* You can add any additional styling for the button */
-.discrepancy-container .mt-4 {
-  margin-top: 25px;
+/* Discrepancy report text alignment */
+.discrepancy-container .mt-6,
+.station-box .mt-6,
+.processor-box .mt-6 {
+  text-align: center;
 }
-
 
 /* Individual boxes for Station and Processor */
 .station-box,
@@ -94,7 +93,8 @@ body {
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 25px; /* Consistent spacing between elements */
+  gap: 25px;
+  text-align: center;
 }
 
 /* Input fields and buttons consistency */
@@ -102,16 +102,16 @@ input, select {
   width: 80%;
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid #d1d5db; /* Light border */
+  border: 1px solid #d1d5db;
   font-size: 1rem;
   outline: none;
   transition: border 0.2s ease;
-  margin-top: 25px; /* Margin at the top */
-  margin-bottom: 25px; /* Margin at the bottom */
+  margin-top: 25px;
+  margin-bottom: 25px;
 }
 
 input:focus, select:focus {
-  border: 1px solid #4F46E5; /* Focus border color */
+  border: 1px solid #4F46E5;
 }
 
 /* Buttons styling */
@@ -124,7 +124,10 @@ button {
   cursor: pointer;
   font-size: 1rem;
   transition: background-color 0.2s ease;
-  align-self: center; /* Centers the button horizontally */
+  align-self: center;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 button:hover {
@@ -134,27 +137,27 @@ button:hover {
 /* On larger screens, stack them side by side */
 @media (min-width: 768px) {
   .box-container {
-    flex-direction: row; /* Row layout on medium screens and larger */
+    flex-direction: row;
   }
 
   .station-box,
   .processor-box {
-    width: 50%; /* Each box takes up 48% of the container */
+    width: 50%;
   }
 }
 
 .bg-maroon {
-  background-color: #800000; /* Maroon color */
+  background-color: #800000;
 }
 
-/* Make sure footer stays at the bottom */
+/* Footer styles */
 footer {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
   padding: 1rem;
-  background-color: #800000; /* Maroon */
+  background-color: #800000;
   color: white;
   display: flex;
   justify-content: space-around;

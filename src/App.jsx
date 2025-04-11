@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,12 @@ export default function LoadIDTrackingDemo() {
   const [station, setStation] = useState('');
   const [loadID, setLoadID] = useState('');
   const [processorStation, setProcessorStation] = useState('');
+  const [employeeID, setEmployeeID] = useState('');
+  const [employeeLoggedIn, setEmployeeLoggedIn] = useState(false);
+
+  useEffect(() => {
+    document.title = "Demo Interface";
+  }, []);
 
   const handleAssign = () => {
     setAssignments([...assignments, { station, loadID, time: new Date().toLocaleTimeString() }]);
@@ -21,60 +27,104 @@ export default function LoadIDTrackingDemo() {
   };
 
   const handleScan = () => {
-    if (!processorStation) {
-      alert('Please select your station.');
+    if (!processorStation || !employeeID) {
+      alert('Please enter your Employee ID and select your station.');
       return;
     }
 
-    setScans([...scans, { station: processorStation, loadID, time: new Date().toLocaleTimeString() }]);
+    setScans([...scans, { station: processorStation, loadID, processorID: employeeID, time: new Date().toLocaleTimeString() }]);
     setLoadID('');
   };
 
-  const getDiscrepancies = () => {
-    const stationGroups = {};
-    assignments.forEach(a => {
-      if (!stationGroups[a.station]) stationGroups[a.station] = { assigned: 0, scanned: 0 };
-      stationGroups[a.station].assigned += 1;
-    });
-    scans.forEach(s => {
-      if (!stationGroups[s.station]) stationGroups[s.station] = { assigned: 0, scanned: 0 };
-      stationGroups[s.station].scanned += 1;
-    });
-    return Object.entries(stationGroups).map(([station, data]) => ({
-      station,
-      assigned: data.assigned,
-      scanned: data.scanned,
-      mismatch: data.assigned !== data.scanned
-    }));
+  const handleLogin = () => {
+    if (employeeID.trim().length === 6 && processorStation) {
+      setEmployeeLoggedIn(true);
+    } else {
+      alert("Please enter a valid 6-digit Employee ID and select a station.");
+    }
   };
 
-  // Export the discrepancy list to PDF
+  const handleLogout = () => {
+    setEmployeeID('');
+    setProcessorStation('');
+    setEmployeeLoggedIn(false);
+  };
+
+  const getDetailedDiscrepancies = () => {
+    const stationMap = {};
+
+    assignments.forEach(({ station, loadID }) => {
+      if (!stationMap[station]) {
+        stationMap[station] = { assignedLoadIDs: [], scannedLoadIDs: [], processorID: null };
+      }
+      stationMap[station].assignedLoadIDs.push(loadID);
+    });
+
+    scans.forEach(({ station, loadID, processorID }) => {
+      if (!stationMap[station]) {
+        stationMap[station] = { assignedLoadIDs: [], scannedLoadIDs: [], processorID };
+      }
+      stationMap[station].scannedLoadIDs.push(loadID);
+      stationMap[station].processorID = processorID;
+    });
+
+    return Object.entries(stationMap).map(([station, data]) => {
+      const { assignedLoadIDs, scannedLoadIDs, processorID } = data;
+      const missingLoadIDs = assignedLoadIDs.filter(id => !scannedLoadIDs.includes(id));
+
+      return {
+        station,
+        processorID: processorID || "N/A",
+        assignedLoadIDs,
+        scannedLoadIDs,
+        missingLoadIDs,
+        hasMismatch: missingLoadIDs.length > 0
+      };
+    });
+  };
+
   const exportToPDF = () => {
     const doc = new jsPDF();
-
-    const discrepancies = getDiscrepancies();
-    
+    const discrepancies = getDetailedDiscrepancies();
+  
     discrepancies.forEach((discrepancy, idx) => {
-      if (idx > 0) {
-        doc.addPage(); // Add a new page for each station
-      }
-
+      if (idx > 0) doc.addPage();
+  
       doc.setFont("helvetica", "normal");
       doc.setFontSize(16);
-      doc.text(`Discrepancy Report for Station: ${discrepancy.station}`, 20, 20);
-
-      // Add employee ID and details
+      doc.text(`Discrepancy Report`, 20, 20);
+  
       doc.setFontSize(12);
-      doc.text(`Employee ID: ${discrepancy.station}`, 20, 40); // Using the station as Employee ID for now
-      doc.text(`Pallets Assigned: ${discrepancy.assigned}`, 20, 50);
-      doc.text(`LoadIDs Scanned: ${discrepancy.scanned}`, 20, 60);
-
-      // Display mismatch status
-      doc.text(`Mismatch: ${discrepancy.mismatch ? 'Yes' : 'No'}`, 20, 70);
+      doc.text(`Station: ${discrepancy.station}`, 20, 30);
+      doc.text(`Processor: ${discrepancy.processorID}`, 20, 40);
+  
+      doc.setFontSize(11);
+      doc.text(`Assigned LoadIDs:`, 20, 50);
+      const assignedWithTimes = assignments
+        .filter(a => a.station === discrepancy.station)
+        .map(a => `${a.loadID} (${a.time})`);
+      doc.text(assignedWithTimes.join(', '), 20, 58);
+  
+      doc.text(`Scanned LoadIDs:`, 20, 70);
+      const scannedWithTimes = scans
+        .filter(s => s.station === discrepancy.station)
+        .map(s => `${s.loadID} (${s.time})`);
+      doc.text(scannedWithTimes.join(', '), 20, 78);
+  
+      doc.setFontSize(11);
+      doc.text(`Mismatch: ${discrepancy.hasMismatch ? 'Yes' : 'No'}`, 20, 90);
+  
+      if (discrepancy.hasMismatch) {
+        doc.setTextColor(200, 0, 0);
+        doc.text(`Missing LoadIDs (Assigned but not scanned):`, 20, 100);
+        doc.text(discrepancy.missingLoadIDs.join(', '), 20, 108);
+        doc.setTextColor(0, 0, 0);
+      }
     });
-
-    doc.save("discrepency-report.pdf");
+  
+    doc.save("discrepancy-report.pdf");
   };
+  
 
   return (
     <div className="centered-container">
@@ -94,7 +144,7 @@ export default function LoadIDTrackingDemo() {
                 <Input
                   placeholder="Enter Station (e.g., Station 1)"
                   value={station}
-                  onChange={e => setStation(e.target.value)}
+                  onChange={e => setStation(e.target.value.toUpperCase())}
                 />
                 <Input
                   placeholder="Enter LoadID"
@@ -132,9 +182,13 @@ export default function LoadIDTrackingDemo() {
             <CardContent className="space-y-6">
               <h2 className="text-3xl font-semibold text-center text-green-600">Processor LoadID Scan</h2>
 
-              {/* Station Selection for Processor */}
-              {!processorStation ? (
+              {!employeeLoggedIn ? (
                 <div className="space-y-4">
+                  <Input
+                    placeholder="Enter 6-digit Employee ID"
+                    value={employeeID}
+                    onChange={e => setEmployeeID(e.target.value)}
+                  />
                   <select
                     onChange={e => setProcessorStation(e.target.value)}
                     value={processorStation}
@@ -144,21 +198,25 @@ export default function LoadIDTrackingDemo() {
                       <option key={station} value={station}>{station}</option>
                     ))}
                   </select>
+                  <Button onClick={handleLogin}>Log In</Button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p className="text-sm text-green-600">You are currently assigned to {processorStation}</p>
+                  <p className="text-sm text-green-600">Employee {employeeID} logged in at {processorStation}</p>
+                  <Button variant="outline" onClick={handleLogout}>Logout</Button>
                 </div>
               )}
 
-              <div className="space-y-4">
-                <Input
-                  placeholder="Enter LoadID"
-                  value={loadID}
-                  onChange={e => setLoadID(e.target.value)}
-                />
-                <Button onClick={handleScan}>Scan LoadID</Button>
-              </div>
+              {employeeLoggedIn && (
+                <div className="space-y-4">
+                  <Input
+                    placeholder="Enter LoadID"
+                    value={loadID}
+                    onChange={e => setLoadID(e.target.value)}
+                  />
+                  <Button onClick={handleScan}>Scan LoadID</Button>
+                </div>
+              )}
 
               <Table className="mt-6">
                 <TableHead>
@@ -183,40 +241,40 @@ export default function LoadIDTrackingDemo() {
         </div>
       </div>
 
-{/* Discrepancy Report */}
-<div className="discrepancy-container mt-8 w-full">
-  <Card className="bg-white shadow-lg rounded-lg p-6">
-    <CardContent>
-      <h2 className="text-3xl font-semibold text-center text-gray-700 mb-4">Discrepancy Report</h2>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell className="text-left font-semibold text-gray-700">Station</TableCell>
-            <TableCell className="text-left font-semibold text-gray-700">Pallets Assigned</TableCell>
-            <TableCell className="text-left font-semibold text-gray-700">LoadIDs Scanned</TableCell>
-            <TableCell className="text-left font-semibold text-gray-700">Mismatch</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {getDiscrepancies().map((d, i) => (
-            <TableRow key={i}>
-              <TableCell>{d.station}</TableCell>
-              <TableCell>{d.assigned}</TableCell>
-              <TableCell>{d.scanned}</TableCell>
-              <TableCell className={d.mismatch ? 'text-red-500' : 'text-green-600'}>
-                {d.mismatch ? 'Yes' : 'No'}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {/* Discrepancy Report */}
+      <div className="discrepancy-container mt-8 w-full">
+        <Card className="bg-white shadow-lg rounded-lg p-6">
+          <CardContent>
+            <h2 className="text-3xl font-semibold text-center text-gray-700 mb-4">Discrepancy Report</h2>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell className="text-left font-semibold text-gray-700">Station</TableCell>
+                  <TableCell className="text-left font-semibold text-gray-700">Pallets Assigned</TableCell>
+                  <TableCell className="text-left font-semibold text-gray-700">LoadIDs Scanned</TableCell>
+                  <TableCell className="text-left font-semibold text-gray-700">Mismatch</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {getDetailedDiscrepancies().map((d, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{d.station}</TableCell>
+                    <TableCell>{d.assignedLoadIDs.join(', ')}</TableCell>
+                    <TableCell>{d.scannedLoadIDs.join(', ')}</TableCell>
+                    <TableCell className={d.hasMismatch ? 'text-red-500' : 'text-green-600'}>
+                      {d.hasMismatch ? 'Yes' : 'No'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
-      <div className="mt-4 text-center">
-        <Button onClick={exportToPDF}>Export Discrepancies to PDF</Button>
+            <div className="mt-4 text-center">
+              <Button onClick={exportToPDF}>Export Discrepancies to PDF</Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </CardContent>
-  </Card>
-</div>
 
 
       {/* Footer */}
