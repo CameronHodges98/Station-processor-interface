@@ -1,19 +1,16 @@
 # Station Processor Interface
-
-A web-based application for real-time monitoring and Discrepency tracking with stati.
+## 🔍 Overview
+The Station Processor Interface is a web-based application designed to facilitate real-time monitoring and interaction with various station processors. Built with React and Vite, and styled using Tailwind CSS, the application offers a responsive and intuitive user interface.
 
 ## 🚀 Live Demo
 
 Access the live application at: [https://station-processor-interface.web.app/](https://station-processor-interface.web.app/)
 
-## 🧰 Features
-
-- **Real-Time Monitoring:** View live status updates from connected station processors.
-- **Interactive Controls:** Send commands or configurations to processors.
-- **Responsive Design:** Optimized for both desktop and mobile devices.
-- **User-Friendly Interface:** Intuitive navigation and clean UI.
-- **Modern Stack:** Built using Vite, React, and Tailwind CSS.
-- **Discrepency Tracking:** Exportable PDF files making tracking simple and convenient.
+## 🧰 Key Features
+- **Real-Time Monitoring: Track the status and performance metrics of connected station processors.
+- **Interactive Controls: Send commands or configurations to processors directly from the interface.
+- **Responsive Design: Ensures usability across a range of devices, from desktops to mobile phones.
+- **Scalable Architecture: Built with modern web technologies to support future enhancements and integrations.
 
 ## 🛠️ Technologies Used
 
